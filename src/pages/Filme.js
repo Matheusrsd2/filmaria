@@ -1,46 +1,85 @@
-import {useParams} from 'react-router-dom';
+
+import { useEffect, useState } from 'react';
+import './filme-info.css';
+import { useParams, useHistory } from 'react-router-dom';
 import api from '../services/api';
-import {useEffect, useState} from 'react'
 
 export default function Filme(){
-    const {id} = useParams();
-    const [filme, setFilmes] = useState([]);
-    const [load, setLoad] = useState(true);
+  const { id } = useParams();
+  const history = useHistory();
 
-    useEffect(() => {
-        async function loadFilme(){
-            const response = await api.get(`r-api/?api=filmes/${id}`);
-            setFilmes(response.data)
-            setLoad(false);
-            //console.log(response.data)
-        }
-        loadFilme();
-    }, [id])
+  const [filme, setFilme] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    if(load){
-        return(
-            <div className="filme-info">
-                <h1>Carregando</h1>
-            </div>
-        );
+  useEffect(()=>{
+
+    async function loadFilme(){
+      const response = await api.get(`r-api/?api=filmes/${id}`);
+      
+      if(response.data.length === 0){
+        //Tentou acessar com um ID que nao existe, navego ele para home!
+        history.replace('/');
+        return;
+      }
+
+      setFilme(response.data);
+      setLoading(false);
     }
-    return (
-        <div>
-            <h3>Pagina do Filme</h3>
-            <article key={filme.id}>
-              <h1>{filme.nome}</h1>
-              <img src={filme.foto} alt={filme.nome}></img>     
-            </article>
 
-            <h3>Sinopse</h3>
-            {filme.sinopse}
+    loadFilme();
 
-            <div className="botoes">
-                <button onClick={() => {}}>Salvar</button>
-                <button> 
-                    <a href={`http://youtube.com/results?search_query=${filme.nome}`}>Trailer</a>
-                </button>
-            </div>
-        </div>
-    );
+    return () => {
+      console.log('COMPONENTE DESMONTADO')
+    }
+
+  }, [history, id]);
+
+    function salvaFilme(){
+        
+        const minhaLista = localStorage.getItem('filmes');
+
+        let filmesSalvos = JSON.parse(minhaLista) || [];
+
+        //Se tiver algum filme salvo com esse mesmo id precisa ignorar...
+        const hasFilme = filmesSalvos.some( (filmeSalvo) => filmeSalvo.id === filme.id )
+        
+        if(hasFilme){
+        alert('Você já possui esse filme salvo.');
+        return;
+        //Para execuçao do código aqui...
+        }
+
+        filmesSalvos.push(filme);
+        localStorage.setItem('filmes', JSON.stringify(filmesSalvos));
+        alert('Filme salvo com sucesso!');
+
+
+    }
+
+
+  if(loading){
+    return(
+    <div className="filme-info">
+      <h1>Carregando seu filme...</h1>
+    </div>
+    )
+  }
+  return(
+    <div className="filme-info">
+      <h1> {filme.nome} </h1>
+      <img src={filme.foto} alt={filme.nome} />
+      
+      <h3>Sinopse</h3>
+      {filme.sinopse}
+
+      <div className="botoes">
+        <button onClick={salvaFilme} >Salvar</button>
+        <button>
+          <a target="blank" href={`https://youtube.com/results?search_query=${filme.nome} Trailer`}>
+            Trailer
+          </a>
+        </button>
+      </div>
+    </div>
+  )
 }
