@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import '../services/api';
 import api from '../services/api';
 import './home.css'
+import {Link} from 'react-router-dom';
 
 
 export default function Home() {
@@ -19,14 +20,14 @@ export default function Home() {
 
   return(
     <div className="container">
-      <div className="listafilmes">
+      <div className="lista-filmes">
         {filmes.map((filme) => {
           return (
             <article key={filme.id}>
               <strong>{filme.nome}</strong>
-              <img src={filme.foto} alt={filme.nome}></img>               
+              <img src={filme.foto} alt={filme.nome}></img>        
+              <Link to={`/filme/${filme.id}`}>Acessar</Link>       
             </article>
-            
           );
         })}
       </div>
